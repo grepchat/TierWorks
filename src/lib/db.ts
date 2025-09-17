@@ -1,8 +1,14 @@
 import { supabase } from './supabase'
 import type { Dataset } from '../types'
 
+function ensureClient() {
+  if (!supabase) throw new Error('Supabase client is not configured')
+  return supabase
+}
+
 export async function saveDataset(dataset: Dataset) {
-  const { data, error } = await supabase
+  const client = ensureClient()
+  const { data, error } = await client
     .from('datasets')
     .upsert({
       id: dataset.id,
@@ -20,7 +26,8 @@ export async function saveDataset(dataset: Dataset) {
 }
 
 export async function listMyDatasets() {
-  const { data, error } = await supabase
+  const client = ensureClient()
+  const { data, error } = await client
     .from('datasets')
     .select('*')
     .order('updated_at', { ascending: false })
@@ -29,7 +36,8 @@ export async function listMyDatasets() {
 }
 
 export async function listPublished() {
-  const { data, error } = await supabase
+  const client = ensureClient()
+  const { data, error } = await client
     .from('datasets')
     .select('*')
     .eq('is_published', true)

@@ -1,9 +1,9 @@
 import { DndContext, useDroppable } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
-import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEffect, useMemo, useState } from 'react'
-import type { Dataset, DatasetItem, Tier } from '../types'
+import type { Dataset, DatasetItem } from '../types'
 import { useDatasets } from '../store/datasets'
 import { buildShareUrl } from '../lib/share'
 

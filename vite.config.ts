@@ -5,5 +5,5 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   // Замените имя репозитория при деплое, если будет иное
-  base: '/TierWorks/',
+  base: process.env.VITE_BASE_PATH ?? '/TierWorks/',
 })

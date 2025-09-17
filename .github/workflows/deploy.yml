@@ -16,12 +16,25 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - name: Build (custom domain)
+        if: ${{ secrets.CUSTOM_DOMAIN }}
+        run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_BASE_PATH: /
+      - name: Build (repo base)
+        if: ${{ !secrets.CUSTOM_DOMAIN }}
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
       - name: Add 404 fallback for GitHub Pages SPA
         run: cp dist/index.html dist/404.html
+      - name: Add CNAME for custom domain
+        if: ${{ secrets.CUSTOM_DOMAIN }}
+        run: echo "${{ secrets.CUSTOM_DOMAIN }}" > dist/CNAME
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
