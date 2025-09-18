@@ -1,0 +1,39 @@
+{
+  "name": "tierworks",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm:serve\" \"npm:watch\" \"npm:watch:css\"",
+    "watch": "node ./scripts/esbuild.mjs --watch --mode=development",
+    "build:css": "node ./scripts/build-css.cjs",
+    "watch:css": "node ./scripts/build-css.cjs --watch",
+    "serve": "live-server --port=5174 --no-browser --quiet --wait=100 --open=/index.html",
+    "build": "tsc -b && npm run build:css && node ./scripts/esbuild.mjs --mode=production",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.24.2",
+    "eslint": "^9.35.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.4.0",
+    "live-server": "^1.2.2",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.43.0",
+    "vite": "^7.1.6"
+  }
+}
