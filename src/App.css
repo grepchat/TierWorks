@@ -40,7 +40,7 @@
 .tw-nav a:hover { color: #ffffff; }
 .tw-nav a.active { color: #ffffff; }
 /* Glow/underline hover like reference, in Indigo/Slate */
-.tw-nav a.public-link::before {
+.tw-nav a::before {
   content: '';
   position: absolute;
   inset: -6px -10px;
@@ -52,7 +52,7 @@
   transition: opacity .18s ease, transform .18s ease;
   pointer-events: none;
 }
-.tw-nav a.public-link::after {
+.tw-nav a::after {
   content: '';
   position: absolute;
   left: 8px; right: 8px; bottom: 2px;
@@ -63,8 +63,8 @@
   transform: translateY(4px);
   transition: opacity .18s ease, transform .18s ease;
 }
-.tw-nav a.public-link:hover::before, .tw-nav a.public-link:focus-visible::before { opacity: 1; transform: scale(1); }
-.tw-nav a.public-link:hover::after, .tw-nav a.public-link:focus-visible::after { opacity: 1; transform: translateY(0); }
+.tw-nav a:hover::before, .tw-nav a:focus-visible::before { opacity: 1; transform: scale(1); }
+.tw-nav a:hover::after, .tw-nav a:focus-visible::after { opacity: 1; transform: translateY(0); }
 
 .tw-brand { color: var(--text); text-decoration: none; }
 .tw-brand:hover {
