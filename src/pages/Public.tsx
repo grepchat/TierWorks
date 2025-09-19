@@ -12,7 +12,12 @@ export default function PublicTemplates() {
         {publicTemplates.map(t => (
           <Link key={t.id} to={`/public/${t.id}`} className="tw-card-link">
             <div className="tw-card">
-              <img src={t.coverUrl} alt={t.name} className="card-cover" />
+              <img
+                src={t.coverUrl}
+                alt={t.name}
+                className="card-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/public/logo.svg' }}
+              />
               <h2 title={t.name}>{truncate(t.name)}</h2>
               <p>{t.description}</p>
             </div>
