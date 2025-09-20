@@ -1,18 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { MediaItem, TierAssignment, TierId } from '../types'
 import { TierGrid } from '../components/TierGrid'
-import { getTemplate, listTemplates } from '../storage'
+import { createUserList, getTemplate, listTemplates } from '../storage'
 import { UploadPanel } from '../components/UploadPanel'
 import { useLocation } from 'react-router-dom'
 import { getPublicTemplate } from '../publicTemplates'
 import { fetchTopTVFromTMDB } from '../tmdb'
 
-const initialPool: MediaItem[] = [
-  { id: 'bb', title: 'Во все тяжкие', imageUrl: 'https://via.placeholder.com/160x90?text=Breaking+Bad' },
-  { id: 'got', title: 'Игра престолов', imageUrl: 'https://via.placeholder.com/160x90?text=GoT' },
-  { id: 'st', title: 'Очень странные дела', imageUrl: 'https://via.placeholder.com/160x90?text=Stranger+Things' },
-  { id: 'crown', title: 'Корона', imageUrl: 'https://via.placeholder.com/160x90?text=The+Crown' },
-]
+const initialPool: MediaItem[] = []
 
 const emptyTiers: TierAssignment = { S: [], A: [], B: [], C: [], D: [], U: [] }
 
@@ -22,6 +17,12 @@ export default function Builder() {
   const [tiers, setTiers] = useState<TierAssignment>(emptyTiers)
   const [templates, setTemplates] = useState<{ id: string; name: string }[]>([])
   const [selected, setSelected] = useState<string>('')
+  const [visibility, setVisibility] = useState<'public' | 'private'>('private')
+  const [name, setName] = useState('')
+  const [desc, setDesc] = useState('')
+  const [cover, setCover] = useState<string | undefined>()
+  const [code, setCode] = useState<string>(() => Math.random().toString(36).slice(2, 8).toUpperCase())
+  const [notice, setNotice] = useState<string | undefined>()
 
   useEffect(() => {
     const list = listTemplates().sort((a, b) => b.createdAt - a.createdAt)
@@ -73,38 +74,8 @@ export default function Builder() {
   return (
     <div>
       <h1>Конструктор</h1>
-      <p>Перетащи элементы из пула в уровни S/A/B/C/D.</p>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '8px 0 16px' }}>
-        <select value={selected} onChange={(e) => setSelected(e.target.value)} style={{ padding: 8, borderRadius: 8, background: 'transparent', color: 'inherit', border: '1px solid rgba(255,255,255,0.2)' }}>
-          <option value="">— Выбрать шаблон —</option>
-          {templates.map(t => (
-            <option key={t.id} value={t.id}>{t.name}</option>
-          ))}
-        </select>
-        <button className="secondary" disabled={!selected} onClick={() => {
-          if (!selected) return
-          const tpl = getTemplate(selected)
-          if (!tpl) return
-          setPool(prev => [...prev, ...tpl.items])
-        }}>Добавить в пул</button>
-      </div>
-      <div style={{ margin: '8px 0 16px' }}>
-        <h3 style={{ margin: '0 0 8px' }}>Импорт в пул</h3>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-          <button className="secondary" onClick={async () => {
-            const apiKey = prompt('Введите TMDB API Key')
-            if (!apiKey) return
-            try {
-              const items = await fetchTopTVFromTMDB(apiKey, 50)
-              setPool(prev => [...prev, ...items])
-            } catch (e: any) {
-              alert('Ошибка TMDB: ' + (e?.message || e))
-            }
-          }}>Импортировать Top‑50 (TMDB)</button>
-        </div>
-        <UploadPanel onItems={(items) => setPool(prev => [...prev, ...items])} />
-      </div>
-      <TierGrid pool={pool} tiers={tiers} onMove={move} />
+      <UploadPanel onItems={(items) => setPool(prev => [...prev, ...items])} />
+      <TierGrid pool={pool} tiers={tiers} onMove={move} showRowControls />
     </div>
   )
 }

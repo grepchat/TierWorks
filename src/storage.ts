@@ -40,6 +40,45 @@ export function getTemplate(id: string): Template | undefined {
   return read().find(t => t.id === id)
 }
 
+// User-created tier list metadata
+export interface UserListMeta {
+  id: string
+  visibility: 'public' | 'private'
+  status: 'draft' | 'pending' | 'published' | 'private'
+  name: string
+  description: string
+  coverDataUrl?: string
+  code?: string
+  createdAt: number
+}
+
+const KEY_USER_LISTS = 'tierworks:userlists'
+
+function readUserLists(): UserListMeta[] {
+  try {
+    const raw = localStorage.getItem(KEY_USER_LISTS)
+    if (!raw) return []
+    const arr = JSON.parse(raw) as UserListMeta[]
+    return Array.isArray(arr) ? arr : []
+  } catch {
+    return []
+  }
+}
+
+function writeUserLists(data: UserListMeta[]) {
+  localStorage.setItem(KEY_USER_LISTS, JSON.stringify(data))
+}
+
+export function createUserList(meta: Omit<UserListMeta, 'id' | 'createdAt'>): string {
+  const id = crypto.randomUUID()
+  const list = readUserLists()
+  list.unshift({ ...meta, id, createdAt: Date.now() })
+  writeUserLists(list)
+  return id
+}
+
+export function listUserLists(): UserListMeta[] { return readUserLists() }
+
 // Saved Results
 import type { SavedResult } from './types'
 

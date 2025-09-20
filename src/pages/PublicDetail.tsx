@@ -22,6 +22,8 @@ export default function PublicDetail() {
   const [saveTitle, setSaveTitle] = useState('')
   const [toast, setToast] = useState<string | undefined>()
   const [notice, setNotice] = useState<string | undefined>()
+  const [incompleteWarn, setIncompleteWarn] = useState<string | undefined>()
+  const [exportWarn, setExportWarn] = useState<string | undefined>()
 
   function notify(message: string) {
     setToast(message)
@@ -207,6 +209,21 @@ export default function PublicDetail() {
     })()
   }, [pool])
 
+  async function doExportPng() {
+    const node = document.getElementById('tier-capture')
+    if (!node) return
+    try {
+      const dataUrl = await toPng(node, { cacheBust: true, pixelRatio: 2 })
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = `${getPublicTemplate(id || '')?.id || 'tier'}-result.png`
+      a.click()
+      notify('PNG экспортирован')
+    } catch (e) {
+      console.warn('PNG export failed', e)
+    }
+  }
+
   return (
     <div>
       <div style={{ marginBottom: 8 }}>
@@ -226,6 +243,7 @@ export default function PublicDetail() {
               selectedItemId={isFromProfile ? undefined : selected}
               onSelectItem={isFromProfile ? undefined : setSelected}
               onAssignClick={isFromProfile ? undefined : onAssignClick}
+              showRowControls={false}
             />
           </div>
         </div>
@@ -233,10 +251,6 @@ export default function PublicDetail() {
           {!isFromProfile && (
             <>
               <h3 style={{ marginTop: 0 }}>Распределение</h3>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-                <button className="tm-tier-btn" onClick={() => setSelected(undefined)}>Снять выделение</button>
-                <button className="tm-tier-btn" onClick={onSkip}>Пропустить</button>
-              </div>
               {!selectedItem && pool.length > 0 && <p style={{ color: '#94a3b8' }}>Выберите элемент в пуле или в одном из уровней.</p>}
               {selectedItem && (
                 <div>
@@ -251,6 +265,9 @@ export default function PublicDetail() {
                       </button>
                     ))}
                   </div>
+                  <div style={{ marginTop: 8 }}>
+                    <button className="tm-tier-btn tm-skip-btn" onClick={onSkip}>Пропустить</button>
+                  </div>
                 </div>
               )}
             </>
@@ -264,23 +281,14 @@ export default function PublicDetail() {
                 if (!template) return
                 const user = getCurrentUser()
                 if (!user) { setNotice('Войдите или зарегистрируйтесь, чтобы сохранять результаты.'); return }
+                if (pool.length > 0) { setIncompleteWarn('Не все элементы распределены. Сохранить результат как есть?'); return }
                 setSaveTitle(template.name)
                 setSaveOpen(true)
               }}>Сохранить результат</button>
             )}
             <button className="tm-tier-btn" onClick={async () => {
-              const node = document.getElementById('tier-capture')
-              if (!node) return
-              try {
-                const dataUrl = await toPng(node, { cacheBust: true, pixelRatio: 2 })
-                const a = document.createElement('a')
-                a.href = dataUrl
-                a.download = `${getPublicTemplate(id || '')?.id || 'tier'}-result.png`
-                a.click()
-                notify('PNG экспортирован')
-              } catch (e) {
-                console.warn('PNG export failed', e)
-              }
+              if (!isFromProfile && pool.length > 0) { setExportWarn('Не все элементы распределены. Экспортировать результат как есть?'); return }
+              await doExportPng()
             }}>Экспорт PNG</button>
           </div>
         </aside>
@@ -323,6 +331,38 @@ export default function PublicDetail() {
         footer={(<button className="tm-tier-btn" onClick={() => setNotice(undefined)}>ОК</button>)}
       >
         <p style={{ margin: 0 }}>{notice}</p>
+      </Modal>
+      <Modal
+        open={!!exportWarn}
+        title="Незавершённое распределение"
+        onClose={() => setExportWarn(undefined)}
+        footer={(
+          <>
+            <button className="tm-tier-btn" onClick={() => setExportWarn(undefined)}>Продолжить распределение</button>
+            <button className="tm-tier-btn" onClick={async () => { setExportWarn(undefined); await doExportPng() }}>Экспортировать сейчас</button>
+          </>
+        )}
+      >
+        <p style={{ margin: 0 }}>{exportWarn}</p>
+      </Modal>
+      <Modal
+        open={!!incompleteWarn}
+        title="Незавершённое распределение"
+        onClose={() => setIncompleteWarn(undefined)}
+        footer={(
+          <>
+            <button className="tm-tier-btn" onClick={() => setIncompleteWarn(undefined)}>Продолжить распределение</button>
+            <button className="tm-tier-btn" onClick={() => {
+              const template = getPublicTemplate(id || '')
+              if (!template) { setIncompleteWarn(undefined); return }
+              setSaveTitle(template.name)
+              setSaveOpen(true)
+              setIncompleteWarn(undefined)
+            }}>Сохранить сейчас</button>
+          </>
+        )}
+      >
+        <p style={{ margin: 0 }}>{incompleteWarn}</p>
       </Modal>
     </div>
   )
