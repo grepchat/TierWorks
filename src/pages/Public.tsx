@@ -8,7 +8,7 @@ export default function PublicTemplates() {
   return (
     <div>
       <h1>Публичные тир-листы</h1>
-      <div className="tw-grid" style={{ marginTop: 12 }}>
+      <div className="tw-grid tw-public-grid" style={{ marginTop: 12 }}>
         {publicTemplates.map(t => (
           <Link key={t.id} to={`/public/${t.id}`} className="tw-card-link">
             <div className="tw-card">

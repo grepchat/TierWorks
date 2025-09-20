@@ -40,4 +40,115 @@ export function getTemplate(id: string): Template | undefined {
   return read().find(t => t.id === id)
 }
 
+// Saved Results
+import type { SavedResult } from './types'
+
+const KEY_RESULTS = 'tierworks:results'
+
+function readResults(): SavedResult[] {
+  try {
+    const raw = localStorage.getItem(KEY_RESULTS)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as SavedResult[]
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writeResults(data: SavedResult[]) {
+  localStorage.setItem(KEY_RESULTS, JSON.stringify(data))
+}
+
+export function saveResult(result: SavedResult) {
+  const list = readResults()
+  const idx = list.findIndex(r => r.id === result.id)
+  if (idx >= 0) list[idx] = result
+  else list.unshift(result)
+  writeResults(list)
+}
+
+export function listResults(): SavedResult[] {
+  return readResults()
+}
+
+export function getResult(id: string): SavedResult | undefined {
+  return readResults().find(r => r.id === id)
+}
+
+export function deleteResult(id: string) {
+  const list = readResults().filter(r => r.id !== id)
+  writeResults(list)
+}
+
+// Auth (mock)
+export interface User {
+  id: string
+  name: string
+  avatarUrl?: string
+}
+
+const KEY_USER = 'tierworks:user'
+
+export function getCurrentUser(): User | undefined {
+  try {
+    const raw = localStorage.getItem(KEY_USER)
+    return raw ? (JSON.parse(raw) as User) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function setCurrentUser(user: User) {
+  localStorage.setItem(KEY_USER, JSON.stringify(user))
+}
+
+export function clearCurrentUser() {
+  localStorage.removeItem(KEY_USER)
+}
+
+// Username registry (mock global uniqueness)
+const KEY_USERNAMES = 'tierworks:usernames'
+
+function readUsernames(): string[] {
+  try {
+    const raw = localStorage.getItem(KEY_USERNAMES)
+    if (!raw) return []
+    const arr = JSON.parse(raw) as string[]
+    return Array.isArray(arr) ? arr : []
+  } catch {
+    return []
+  }
+}
+
+function writeUsernames(list: string[]) {
+  localStorage.setItem(KEY_USERNAMES, JSON.stringify(list))
+}
+
+export function isUsernameTaken(name: string, except?: string): boolean {
+  const n = name.trim().toLowerCase()
+  const ex = (except || '').trim().toLowerCase()
+  return readUsernames().some(u => u.toLowerCase() === n && n !== ex)
+}
+
+export function registerUsername(name: string, previous?: string) {
+  const list = readUsernames()
+  const norm = name.trim()
+  const prev = previous?.trim()
+  const filtered = prev ? list.filter(u => u.toLowerCase() !== prev.toLowerCase()) : list
+  if (!filtered.some(u => u.toLowerCase() === norm.toLowerCase())) filtered.push(norm)
+  writeUsernames(filtered)
+}
+
+export function deleteAccountData() {
+  const user = getCurrentUser()
+  if (user?.name) {
+    const list = readUsernames().filter(u => u.toLowerCase() !== user.name.toLowerCase())
+    writeUsernames(list)
+  }
+  localStorage.removeItem(KEY_USER)
+  localStorage.removeItem(KEY_RESULTS)
+  localStorage.removeItem(KEY)
+}
+
 

@@ -8,3 +8,12 @@ export interface MediaItem {
 
 export type TierAssignment = Record<TierId, MediaItem[]>
 
+export interface SavedResult {
+  id: string
+  templateId: string
+  templateName: string
+  createdAt: number
+  tiers: TierAssignment
+  title?: string
+}
+

@@ -2,7 +2,7 @@ import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { MediaItem, TierAssignment, TierId } from '../types'
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 interface TierGridProps {
   pool: MediaItem[]
@@ -65,24 +65,26 @@ export function TierGrid({ pool, tiers, onMove, selectedItemId, onSelectItem, on
           </div>
         ))}
       </div>
-      <div className="tm-pool">
-        <h2>Пул</h2>
-        <SortableContext items={containers.pool} strategy={rectSortingStrategy}>
-          <div className="tm-pool-grid">
-            {pool.map((item, idx) => (
-              <SortableItem
-                key={item.id}
-                id={`pool:${idx}`}
-                itemId={item.id}
-                onPointerDown={() => onSelectItem?.(item.id)}
-                onClick={() => onSelectItem?.(item.id)}
-              >
-                <Thumb item={item} selected={selectedItemId === item.id} />
-              </SortableItem>
-            ))}
-          </div>
-        </SortableContext>
-      </div>
+      {pool.length > 0 && (
+        <div className="tm-pool">
+          <h2>Пул</h2>
+          <SortableContext items={containers.pool} strategy={rectSortingStrategy}>
+            <div className="tm-pool-grid">
+              {pool.map((item, idx) => (
+                <SortableItem
+                  key={item.id}
+                  id={`pool:${idx}`}
+                  itemId={item.id}
+                  onPointerDown={() => onSelectItem?.(item.id)}
+                  onClick={() => onSelectItem?.(item.id)}
+                >
+                  <Thumb item={item} selected={selectedItemId === item.id} />
+                </SortableItem>
+              ))}
+            </div>
+          </SortableContext>
+        </div>
+      )}
     </DndContext>
   )
 }
