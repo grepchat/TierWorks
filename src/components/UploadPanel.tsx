@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 interface UploadItem {
   id: string
@@ -28,16 +28,6 @@ export function UploadPanel({ onItems }: { onItems?: (items: { id: string; title
         <button className="secondary" onClick={() => inputRef.current?.click()}>Выбрать файлы</button>
         <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => onSelectFiles(e.target.files)} />
       </div>
-      {items.length > 0 && (
-        <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
-          {items.map(i => (
-            <div key={i.id} className="card">
-              <img src={i.url} alt={i.name} />
-              <input defaultValue={i.name} aria-label="Подпись" style={{ width: '100%', marginTop: 6 }} />
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

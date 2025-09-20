@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MediaItem, TierAssignment, TierId } from '../types'
 import { TierGrid } from '../components/TierGrid'
 import { createUserList, getTemplate, listTemplates } from '../storage'
 import { UploadPanel } from '../components/UploadPanel'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { getPublicTemplate } from '../publicTemplates'
 import { fetchTopTVFromTMDB } from '../tmdb'
 
@@ -23,16 +23,35 @@ export default function Builder() {
   const [cover, setCover] = useState<string | undefined>()
   const [code, setCode] = useState<string>(() => Math.random().toString(36).slice(2, 8).toUpperCase())
   const [notice, setNotice] = useState<string | undefined>()
+  const progressLoadedRef = useRef(false)
 
   useEffect(() => {
     const list = listTemplates().sort((a, b) => b.createdAt - a.createdAt)
     setTemplates(list.map(t => ({ id: t.id, name: t.name })))
   }, [])
 
+  // Load saved builder progress (pool + tiers)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('tierworks:builder:progress')
+      if (!raw) return
+      const data = JSON.parse(raw) as { pool?: MediaItem[]; tiers?: TierAssignment }
+      if (data.pool && Array.isArray(data.pool)) setPool(data.pool)
+      if (data.tiers) setTiers(data.tiers)
+      progressLoadedRef.current = true
+    } catch {}
+  }, [])
+
+  // Persist progress
+  useEffect(() => {
+    const snapshot = JSON.stringify({ pool, tiers })
+    localStorage.setItem('tierworks:builder:progress', snapshot)
+  }, [pool, tiers])
+
   useEffect(() => {
     const qp = new URLSearchParams(loc.search)
     const tplId = qp.get('tpl')
-    if (tplId) {
+    if (tplId && !progressLoadedRef.current) {
       const pub = getPublicTemplate(tplId)
       if (pub) setPool(prev => [...pub.items, ...prev])
     }
@@ -73,9 +92,22 @@ export default function Builder() {
 
   return (
     <div>
+      <div style={{ marginBottom: 8 }}>
+        <Link to="/builder" className="back-link">Назад к параметрам</Link>
+      </div>
       <h1>Конструктор</h1>
       <UploadPanel onItems={(items) => setPool(prev => [...prev, ...items])} />
-      <TierGrid pool={pool} tiers={tiers} onMove={move} showRowControls />
+      <TierGrid
+        poolFirst
+        showEmptyPoolHint
+        dragFromPoolOnly
+        editablePoolTitles
+        onRenameItem={(id, title) => setPool(prev => prev.map(i => i.id === id ? { ...i, title } : i))}
+        pool={pool}
+        tiers={tiers}
+        onMove={move}
+        showRowControls
+      />
     </div>
   )
 }

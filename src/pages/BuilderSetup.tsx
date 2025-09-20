@@ -1,22 +1,77 @@
-import { useState } from 'react'
-import { createUserList } from '../storage'
+import { useEffect, useState } from 'react'
+import { createUserList, listUserLists } from '../storage'
 import { useNavigate } from 'react-router-dom'
 
 export default function BuilderSetup() {
   const navigate = useNavigate()
-  const [visibility, setVisibility] = useState<'public' | 'private'>('private')
-  const [name, setName] = useState('')
-  const [desc, setDesc] = useState('')
-  const [cover, setCover] = useState<string | undefined>()
-  const [coverName, setCoverName] = useState<string | undefined>()
+  // Read draft first for initial values (no flicker)
+  const draft = (() => {
+    try {
+      const raw = localStorage.getItem('tierworks:builder:setup')
+      return raw ? JSON.parse(raw) as { visibility?: 'public' | 'private'; name?: string; desc?: string; cover?: string; code?: string; coverName?: string } : {}
+    } catch { return {} as any }
+  })()
+  const [visibility, setVisibility] = useState<'public' | 'private'>(() => draft.visibility || 'private')
+  const [name, setName] = useState(() => draft.name || '')
+  const [desc, setDesc] = useState(() => draft.desc || '')
+  const [cover, setCover] = useState<string | undefined>(() => draft.cover)
+  const [coverName, setCoverName] = useState<string | undefined>(() => draft.coverName)
   const [coverError, setCoverError] = useState<string | undefined>()
-  const [code, setCode] = useState<string>(() => Math.random().toString(36).slice(2, 8).toUpperCase())
+  const [code, setCode] = useState<string>(() => draft.code || Math.random().toString(36).slice(2, 8).toUpperCase())
   // notice removed
   const [nameError, setNameError] = useState<string | undefined>()
+
+  // Load saved setup parameters
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('tierworks:builder:setup')
+      if (!raw) return
+      const data = JSON.parse(raw) as { visibility?: 'public' | 'private'; name?: string; desc?: string; cover?: string; code?: string; coverName?: string }
+      if (data.visibility) setVisibility(data.visibility)
+      if (typeof data.name === 'string') setName(data.name)
+      if (typeof data.desc === 'string') setDesc(data.desc)
+      if (typeof data.cover === 'string') setCover(data.cover)
+      if (typeof data.coverName === 'string') setCoverName(data.coverName)
+      if (typeof data.code === 'string') setCode(data.code)
+    } catch {}
+  }, [])
+
+  // Fallback: prefill from the latest created user list if no local draft
+  useEffect(() => {
+    if (name || desc || cover || coverName) return
+    try {
+      const lists = listUserLists()
+      if (lists.length === 0) return
+      const latest = lists[0]
+      if (latest) {
+        setVisibility(latest.visibility)
+        setName(latest.name)
+        setDesc(latest.description)
+        if (latest.coverDataUrl) setCover(latest.coverDataUrl)
+        if (latest.code) setCode(latest.code)
+        // Persist snapshot for future mounts
+        localStorage.setItem('tierworks:builder:setup', JSON.stringify({
+          visibility: latest.visibility,
+          name: latest.name,
+          desc: latest.description,
+          cover: latest.coverDataUrl,
+          code: latest.code,
+        }))
+      }
+    } catch {}
+  }, [name, desc, cover, coverName])
+
+  // Persist setup on changes
+  useEffect(() => {
+    const snapshot = JSON.stringify({ visibility, name, desc, cover, code, coverName })
+    localStorage.setItem('tierworks:builder:setup', snapshot)
+  }, [visibility, name, desc, cover, code, coverName])
 
   function onSubmit() {
     if (!name.trim()) { setNameError('Введите название'); return }
     createUserList({ visibility, status: visibility==='public' ? 'pending' : 'private', name: name.trim(), description: desc.trim(), coverDataUrl: cover, code: visibility==='private' ? code : undefined })
+    // Ensure latest setup is persisted before leaving
+    localStorage.setItem('tierworks:builder:setup', JSON.stringify({ visibility, name, desc, cover, code, coverName }))
     setTimeout(() => navigate('/builder/compose'), 300)
   }
 
